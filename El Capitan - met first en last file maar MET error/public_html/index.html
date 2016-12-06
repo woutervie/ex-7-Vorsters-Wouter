@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Drones</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+           
+            <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/stylish-portfolio.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+    
+        <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+       
+        <script>
+            
+            var settings = {
+                "async": true, // om te testen dit op false gezet
+                "crossDomain": true,
+                "url": "https://web-ims.thomasmore.be/datadistribution/API/2.0/drones?format=json",
+                "method": "GET",
+                "headers": {
+                  "authorization": "Basic aW1zOno1MTJtVDRKeVgwUExXZw==",
+                  "cache-control": "no-cache",
+                  "postman-token": "905e14f1-b137-9f31-1ce8-8c988732a50d"
+                },
+                "processData": false,
+                "contentType": false,
+                "mimeType": "multipart/form-data"
+            };
+          
+            $.ajax(settings).done(function(responseText){
+                
+                // We stellen een array op van drone URL's
+                var object = jQuery.parseJSON(responseText);
+                var dronesURL = [];
+                
+                for (i = 0; i < object.length; i++) { 
+                    dronesURL.push(object[i].url);
+                }
+                                
+                // Dit is de tabel die zal worden aangevuld
+                var thisTable="<tr>\n\
+                <th>Drone: naam</th>\n\
+                <th>Drone: mac-address</th>\n\
+                <th>File: id</th>\n\
+                <th>File: first record</th>\n\
+                <th>File: last record</th>\n\
+                </tr>";
+        
+                // We voegen per URL de nodige info toe aan de tabel
+                var i;   
+            
+                for (i = 0; i < dronesURL.length; i++) {
+                    var settings = {
+                        "async": false,
+                        "crossDomain": true,
+                        "url": dronesURL[i],
+                        "method": "GET",
+                        "headers": {
+                          "authorization": "Basic aW1zOno1MTJtVDRKeVgwUExXZw==",
+                          "cache-control": "no-cache",
+                          "postman-token": "905e14f1-b137-9f31-1ce8-8c988732a50d"
+                        },
+                        "processData": false,
+                        "contentType": false,
+                        "mimeType": "multipart/form-data"
+                    };
+
+                    $.ajax(settings).done(function(responseText){
+                        var object = jQuery.parseJSON(responseText);
+
+                        droneREF = "drones/" + object.id;
+                        name = object.name;
+                        mac_address = object.mac_address;
+
+                    }).fail(function(){
+                        alert("An error has occurred");
+                    });
+                    
+                    // Toevoegen van files
+                    
+                    var settings = {
+                        "async": false,
+                        "crossDomain": true,
+                        "url": "https://web-ims.thomasmore.be/datadistribution/API/2.0/files?format=json",
+                        "method": "GET",
+                        "headers": {
+                          "authorization": "Basic aW1zOno1MTJtVDRKeVgwUExXZw==",
+                          "cache-control": "no-cache",
+                          "postman-token": "905e14f1-b137-9f31-1ce8-8c988732a50d"
+                        },
+                        "processData": false,
+                        "contentType": false,
+                        "mimeType": "multipart/form-data"
+                    };
+
+                    $.ajax(settings).done(function(responseText){
+                        var object = jQuery.parseJSON(responseText);
+                        
+                        var i;
+                        for (i = 0; i < object.length; i++) {
+                            if(object[i].ref == droneREF){
+                                /*thisTable += "<tr><td>" +
+                                name +
+                                "</td><td>" +
+                                mac_address +
+                                "</td><td>" +
+                                object[i].id +
+                                "</td></tr>"*/
+                
+                                fileURL = object[i].url;
+                                fileID = object[i].id;
+                        
+                                /////////////////////////////////////////////
+                                
+                                // Toevoegen van file info
+                                
+                                var settings = {
+                                    "async": true,
+                                    "crossDomain": true,
+                                    "url": fileURL,
+                                    "method": "GET",
+                                    "headers": {
+                                      "authorization": "Basic aW1zOno1MTJtVDRKeVgwUExXZw==",
+                                      "cache-control": "no-cache",
+                                      "postman-token": "905e14f1-b137-9f31-1ce8-8c988732a50d"
+                                    },
+                                    "processData": false,
+                                    "contentType": false,
+                                    "mimeType": "multipart/form-data"
+                                };
+
+                                $.ajax(settings).done(function(responseText){
+                                    var object = jQuery.parseJSON(responseText);
+
+                                    thisTable += "<tr><td>" +
+                                    name +
+                                    "</td><td>" +
+                                    mac_address +
+                                    "</td><td>" +
+                                    fileID +
+                                    "</td></tr>"
+
+                                }).fail(function(){
+                                    alert("An error has occurred");
+                                });
+                                
+                                /////////////////////////////////////////////
+                        
+                            }
+                        }
+                        
+                    }).fail(function(){
+                        alert("An error has occurred");
+                    });
+                }
+                
+                console.log(thisTable);
+                
+                // We plaatsen de tabel in de HTML
+                document.getElementById("table").innerHTML = thisTable;             
+                
+            }).fail(function(){
+                alert("An error has occurred");
+            });
+ 
+        </script>
+              
+    </head>
+    <body class="container">    
+        <header id="top" class="header">
+        <div class="text-vertical-center">
+                <h1>Drones</h1>
+                <table class="table-striped" id="table"></table>
+        </div>
+        </header>
+    </body>
+</html>
